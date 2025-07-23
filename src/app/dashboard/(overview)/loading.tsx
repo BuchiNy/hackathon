@@ -1,0 +1,1 @@
+//shimmer effects skeletons to show while the page loads the ui/data
