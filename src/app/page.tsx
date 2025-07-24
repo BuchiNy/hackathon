@@ -1,5 +1,9 @@
 import Link from "next/link";
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
+import { configureAmplify } from "../amplify-config";
+
+configureAmplify();
 
 export default function Home() {
   return (
@@ -7,11 +11,17 @@ export default function Home() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         //Landing page with CTA to the login page
         <Link
-            href="/dashboard"
-            className="mt-6 inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-500"
-          >
-            <span>Dashboard</span> <ArrowForwardIcon className="ml-2 w-5 h-5" />
-          </Link>
+          href="/login"
+          className="mt-6 inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-500"
+        >
+          <span>Login</span> <ArrowForwardIcon className="ml-2 w-5 h-5" />
+        </Link>
+        <Link
+          href="/dashboard"
+          className="mt-6 inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-500"
+        >
+          <span>Dashboard</span> <ArrowForwardIcon className="ml-2 w-5 h-5" />
+        </Link>
       </main>
     </div>
   );

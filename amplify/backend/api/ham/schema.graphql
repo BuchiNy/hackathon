@@ -3,6 +3,7 @@ type User
   @auth(
     rules: [
       { allow: owner }
+      { allow: private, provider: iam }
       { allow: groups, groups: ["doctor"], operations: [read, update] }
     ]
   ) {
