@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function CustomExercise(props: { params: Promise<{ id: string }> }) {
   const [prompt, setPrompt] = useState('');
@@ -91,13 +92,22 @@ export default function CustomExercise(props: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        {/* Footer with Next Button (Positioned Left) */}
-        <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200">
-          <button className='px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700'>
-            Next
-          </button>
+        {/* Footer with Nav buttons*/}
+            <div className="px-6 py-4 flex justify-between">
+                <Link
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                    href={`/dashboard/patients/${id}/exerciseDetails${name ? `?name=${encodeURIComponent(name)}` : ''}`}
+                >
+                    Previous
+                </Link>
+                <Link 
+                        href={`/dashboard/patients/${id}/exerciseDetails/customExercise/createExercise${name ? `?name=${encodeURIComponent(name)}` : ''}${videoUrl ? `&videoUrl=${encodeURIComponent(videoUrl)}` : ''}`}
+                        className='px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700'
+                    >
+                        Next
+                </Link>
+            </div>
         </div>
-      </div>
     </div>
   );
 }

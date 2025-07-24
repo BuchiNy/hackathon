@@ -351,6 +351,14 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
           </div>
         </div>
       </div>
+      <div className="px-6 py-8 mt-10 flex justify-between">
+          <Link
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+            href={`/dashboard/patients`}
+          >
+            Previous
+          </Link>
+      </div>
     </div>
   );
 }
