@@ -18,7 +18,6 @@ import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import ExerciseCard from "../../../libs/components/exerciseCard";
 import Link from "next/link";
 
-// *** Custom minimal mutation for PlanItem ***
 const createPlanItemBasic = /* GraphQL */ `
   mutation CreatePlanItem($input: CreatePlanItemInput!) {
     createPlanItem(input: $input) {
@@ -91,7 +90,6 @@ export default function ExerciseDetails({
       setLoading(false);
     };
     fetchExercises();
-    // eslint-disable-next-line
   }, []);
 
   // Filtering logic for library
@@ -394,7 +392,7 @@ export default function ExerciseDetails({
         });
         const exerciseId = createdExercise.data?.createExercise?.id!;
         await client.graphql({
-          query: createPlanItemBasic, // <-- Only direct fields
+          query: createPlanItemBasic,
           variables: {
             input: {
               planID: planId,
