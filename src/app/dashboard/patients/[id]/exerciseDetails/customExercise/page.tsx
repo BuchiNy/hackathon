@@ -1,25 +1,45 @@
-'use client';
+"use client";
+"use client";
 
-import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { generateClient } from "aws-amplify/api";
+import { generateExerciseMedia } from "@/graphql/mutations";
+import type {
+  GenerateExerciseMediaMutation,
+  GenerateExerciseMediaMutationVariables,
+} from "@/API";
 
-export default function CustomExercise(props: { params: Promise<{ id: string }> }) {
-  const [prompt, setPrompt] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
+const client = generateClient();
+
+export default function CustomExercise({ id }: { id: string }) {
+  const [prompt, setPrompt] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const params = React.use(props.params);
+
   const searchParams = useSearchParams();
-  const name = searchParams.get('name');
-  const id = params.id;
+  const name = searchParams.get("name");
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!prompt) return;
+
     setIsGenerating(true);
+    try {
+      const result = await client.graphql<GenerateExerciseMediaMutation>({
+        query: generateExerciseMedia,
+        variables: { prompt },
+      });
 
-    // Simulate API call
-    setTimeout(() => {
-      setVideoUrl('https://www.w3schools.com/html/mov_bbb.mp4'); // Replace with real generated video URL
+      if ("data" in result && result.data?.generateExerciseMedia?.videoUrl) {
+        setVideoUrl(result.data.generateExerciseMedia.videoUrl);
+      } else {
+        console.warn("No videoUrl returned:", result);
+      }
+    } catch (err) {
+      console.error("Error generating video:", err);
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -45,7 +65,9 @@ export default function CustomExercise(props: { params: Promise<{ id: string }> 
         <div className="flex-1 p-6 overflow-y-auto">
           {/* Video Preview Card (Resized) */}
           <div className="max-w-2xl mb-6 border border-gray-300 rounded-lg bg-gray-100 p-4">
-            <h2 className="text-lg font-medium text-gray-800 mb-2">Video Preview</h2>
+            <h2 className="text-lg font-medium text-gray-800 mb-2">
+              Video Preview
+            </h2>
             <div className="w-full aspect-video bg-white rounded-md border border-gray-200 flex items-center justify-center overflow-hidden">
               {videoUrl ? (
                 <video
@@ -55,7 +77,9 @@ export default function CustomExercise(props: { params: Promise<{ id: string }> 
                 />
               ) : (
                 <p className="text-gray-500 text-sm">
-                  {isGenerating ? 'Generating video...' : 'No video generated yet.'}
+                  {isGenerating
+                    ? "Generating video..."
+                    : "No video generated yet."}
                 </p>
               )}
             </div>
@@ -76,24 +100,24 @@ export default function CustomExercise(props: { params: Promise<{ id: string }> 
           </div>
 
           {/* Generate Button */}
-          <div className='mb-8'>
+          <div className="mb-8">
             <button
               onClick={handleGenerate}
               disabled={!prompt || isGenerating}
               className={`px-4 py-2 text-white rounded-md text-sm font-medium ${
                 !prompt || isGenerating
-                  ? 'bg-blue-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {isGenerating ? 'Generating...' : 'Generate Video'}
+              {isGenerating ? "Generating..." : "Generate Video"}
             </button>
           </div>
         </div>
 
         {/* Footer with Next Button (Positioned Left) */}
         <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200">
-          <button className='px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700'>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
             Next
           </button>
         </div>
