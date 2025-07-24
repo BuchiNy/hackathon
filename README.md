@@ -2,6 +2,17 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+## Aamplify Backend
+
+1. Install Amplify CLI
+   `npm install -g @aws-amplify/cli`
+
+2. Configure amplify
+   `amplify configure`
+
+3. Pull the backend
+   `amplify pull --appId d3mv5soj2rqw0r --envName dev`
+
 First, run the development server:
 
 ```bash
