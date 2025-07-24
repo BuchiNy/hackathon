@@ -8,6 +8,26 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
+export const onUpdateVideoJobById = /* GraphQL */ `subscription OnUpdateVideoJobById($id: ID!) {
+  onUpdateVideoJobById(id: $id) {
+    id
+    userId
+    status
+    prompt
+    videoUrl
+    s3Key
+    created_at
+    updated_at
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVideoJobByIdSubscriptionVariables,
+  APITypes.OnUpdateVideoJobByIdSubscription
+>;
 export const onCreateUser = /* GraphQL */ `subscription OnCreateUser(
   $filter: ModelSubscriptionUserFilterInput
   $owner: String
@@ -135,6 +155,7 @@ export const onCreateExercise = /* GraphQL */ `subscription OnCreateExercise($fi
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -162,6 +183,7 @@ export const onUpdateExercise = /* GraphQL */ `subscription OnUpdateExercise($fi
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -189,6 +211,7 @@ export const onDeleteExercise = /* GraphQL */ `subscription OnDeleteExercise($fi
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -213,6 +236,7 @@ export const onCreateVideoJob = /* GraphQL */ `subscription OnCreateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -235,6 +259,7 @@ export const onUpdateVideoJob = /* GraphQL */ `subscription OnUpdateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -257,6 +282,7 @@ export const onDeleteVideoJob = /* GraphQL */ `subscription OnDeleteVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -501,6 +527,7 @@ export const onCreatePlanItem = /* GraphQL */ `subscription OnCreatePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -550,6 +577,7 @@ export const onUpdatePlanItem = /* GraphQL */ `subscription OnUpdatePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -599,6 +627,7 @@ export const onDeletePlanItem = /* GraphQL */ `subscription OnDeletePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt

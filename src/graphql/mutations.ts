@@ -138,6 +138,7 @@ export const createExercise = /* GraphQL */ `mutation CreateExercise(
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -168,6 +169,7 @@ export const updateExercise = /* GraphQL */ `mutation UpdateExercise(
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -198,6 +200,7 @@ export const deleteExercise = /* GraphQL */ `mutation DeleteExercise(
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -222,6 +225,7 @@ export const createVideoJob = /* GraphQL */ `mutation CreateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -244,6 +248,7 @@ export const updateVideoJob = /* GraphQL */ `mutation UpdateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -266,6 +271,7 @@ export const deleteVideoJob = /* GraphQL */ `mutation DeleteVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -510,6 +516,7 @@ export const createPlanItem = /* GraphQL */ `mutation CreatePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -559,6 +566,7 @@ export const updatePlanItem = /* GraphQL */ `mutation UpdatePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -608,6 +616,7 @@ export const deletePlanItem = /* GraphQL */ `mutation DeletePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt

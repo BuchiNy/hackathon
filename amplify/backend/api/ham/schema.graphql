@@ -48,7 +48,8 @@ type Exercise
   sets: Int
   weight: Float
   description: String
-  demoUrl: String
+  s3Key: String
+  demoUrl: String @function(name: "getVideoUrlFunction-${env}")
   createdAt: AWSDateTime
   usedInPlanItems: [PlanItem] @hasMany(indexName: "byExercise", fields: ["id"])
 }
@@ -58,14 +59,25 @@ type VideoJob
   @auth(
     rules: [
       { allow: owner }
+      {
+        allow: private
+        provider: iam
+        operations: [read, create, delete, update]
+      }
       { allow: groups, groups: ["doctor"], operations: [read, create, update] }
+      {
+        allow: public
+        provider: apiKey
+        operations: [create, read, update, delete]
+      }
     ]
   ) {
-  id: ID! # Maps to DynamoDB jobId
+  id: ID!
   userId: String!
   status: String!
   prompt: String!
-  videoUrl: String
+  videoUrl: String @function(name: "getVideoUrlFunction-${env}")
+  s3Key: String
   created_at: Int!
   updated_at: Int
 }
@@ -149,4 +161,9 @@ type GenerationStatus {
   jobId: ID
   gifUrl: String
   error: String
+}
+
+type Subscription {
+  onUpdateVideoJobById(id: ID!): VideoJob
+    @aws_subscribe(mutations: ["updateVideoJob"])
 }

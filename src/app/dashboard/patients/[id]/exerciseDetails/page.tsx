@@ -1,129 +1,221 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useSearchParams } from 'next/navigation';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
-import ExerciseCard from '../../../libs/components/exerciseCard';
-import Link from 'next/link';
+import React from "react";
+import { useSearchParams } from "next/navigation";
+import { generateClient } from "aws-amplify/api";
+import { listExercises, listPlans } from "@/graphql/queries";
+import { createPlan, createExercise } from "@/graphql/mutations";
+import type {
+  ListExercisesQuery,
+  Exercise as ExerciseType,
+  CreatePlanMutation,
+  CreateExerciseMutation,
+  ListPlansQuery,
+} from "@/API";
 
-interface Exercise {
-  id: string;
-  videoUrl: string;
-  title: string;
-  subtitle?: string;
-  type: string;
-  muscleTargeted: string;
-  equipment: string;
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import ExerciseCard from "../../../libs/components/exerciseCard";
+import Link from "next/link";
+
+const createPlanItemBasic = /* GraphQL */ `
+  mutation CreatePlanItem($input: CreatePlanItemInput!) {
+    createPlanItem(input: $input) {
+      id
+      planID
+      exerciseID
+      sets
+      reps
+      restSec
+    }
+  }
+`;
+
+interface RoutineExercise extends ExerciseType {
+  routineId: string;
+  isExpanded?: boolean;
   sets?: number;
   reps?: number;
   weights?: number;
   frequency?: string;
 }
 
-interface RoutineExercise extends Exercise {
-  routineId: string;
-  isExpanded?: boolean;
-}
-
-const mockExercises: Exercise[] = Array.from({ length: 6 }, (_, i) => ({
-  id: `exercise-${i + 1}`,
-  videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-  title: 'Single leg drop',
-  subtitle: 'A great movement for flexibility and strength',
-  type: i % 2 === 0 ? 'Strengthen Back Mobility' : 'Stretching',
-  muscleTargeted: 'Spine',
-  equipment: 'Resistance Band',
-}));
-
-export default function ExerciseDetails(props: { params: Promise<{ id: string }> }) {
-  const params = React.use(props.params);
+export default function ExerciseDetails({
+  params,
+}: {
+  params: { id: string };
+}) {
   const searchParams = useSearchParams();
-  const name = searchParams.get('name');
+  const name = searchParams.get("name");
   const id = params.id;
 
+  const client = generateClient();
+
+  const [libraryExercises, setLibraryExercises] = React.useState<
+    ExerciseType[]
+  >([]);
   const [routine, setRoutine] = React.useState<RoutineExercise[]>([]);
   const [activeFilters, setActiveFilters] = React.useState({
-    bodyPart: 'Back',
-    condition: '',
-    equipment: ''
+    bodyPart: "Back",
+    condition: "",
+    equipment: "",
   });
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
+  const [sending, setSending] = React.useState(false);
 
   const dragItemIndex = React.useRef<number | null>(null);
 
-  const handleDragStart = (idx: number) => {
+  // Fetch exercises on mount
+  React.useEffect(() => {
+    const fetchExercises = async () => {
+      setLoading(true);
+      setFetchError(null);
+      try {
+        const result = await client.graphql<ListExercisesQuery>({
+          query: listExercises,
+        });
+        if ("data" in result && result.data?.listExercises?.items) {
+          const exercises =
+            result.data.listExercises.items?.filter(Boolean) ?? [];
+          setLibraryExercises(exercises);
+        } else {
+          setLibraryExercises([]);
+        }
+      } catch (err) {
+        setFetchError("Failed to fetch exercises.");
+        setLibraryExercises([]);
+      }
+      setLoading(false);
+    };
+    fetchExercises();
+  }, []);
+
+  // Filtering logic for library
+  const filteredExercises = React.useMemo(() => {
+    return libraryExercises.filter((ex) => {
+      const bodyParts = Array.isArray(ex.targetBodyParts)
+        ? ex.targetBodyParts
+        : [ex.targetBodyParts];
+      const matchesBodyPart =
+        !activeFilters.bodyPart || bodyParts.includes(activeFilters.bodyPart);
+
+      const matchesSearch =
+        !searchTerm ||
+        ex.title?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesBodyPart && matchesSearch;
+    });
+  }, [libraryExercises, activeFilters, searchTerm]);
+
+  // Drag handlers
+  const handleDragStart = React.useCallback((idx: number) => {
     dragItemIndex.current = idx;
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
+  const handleDragOver = React.useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+    },
+    []
+  );
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (dragItemIndex.current !== null) {
-      const exercise = mockExercises[dragItemIndex.current];
-      const routineId = `routine-${Date.now()}-${Math.random()}`;
-      const exerciseWithDetails: RoutineExercise = {
-        ...exercise,
-        routineId,
-        sets: 3,
-        reps: 10,
-        weights: 4,
-        frequency: 'Daily',
-        isExpanded: false
-      };
-      setRoutine(prev => [...prev, exerciseWithDetails]);
-      dragItemIndex.current = null;
-    }
-  };
+  const handleDrop = React.useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      if (dragItemIndex.current !== null) {
+        const exercise = filteredExercises[dragItemIndex.current];
+        const routineId = `routine-${Date.now()}-${Math.random()}`;
+        const exerciseWithDetails: RoutineExercise = {
+          ...exercise,
+          routineId,
+          sets: 3,
+          reps: 10,
+          weights: 4,
+          frequency: "Daily",
+          isExpanded: false,
+        };
+        setRoutine((prev) => [...prev, exerciseWithDetails]);
+        dragItemIndex.current = null;
+      }
+    },
+    [filteredExercises]
+  );
 
-  const toggleExerciseExpansion = (routineId: string) => {
-    setRoutine(prev => prev.map(ex => 
-      ex.routineId === routineId 
-        ? { ...ex, isExpanded: !ex.isExpanded }
-        : ex
-    ));
-  };
+  // Routine editing handlers
+  const toggleExerciseExpansion = React.useCallback((routineId: string) => {
+    setRoutine((prev) =>
+      prev.map((ex) =>
+        ex.routineId === routineId ? { ...ex, isExpanded: !ex.isExpanded } : ex
+      )
+    );
+  }, []);
 
-  const updateExerciseDetails = (routineId: string, field: string, value: string | number) => {
-    setRoutine(prev => prev.map(ex => 
-      ex.routineId === routineId 
-        ? { ...ex, [field]: value }
-        : ex
-    ));
-  };
+  const updateExerciseDetails = React.useCallback(
+    (routineId: string, field: string, value: string | number) => {
+      setRoutine((prev) =>
+        prev.map((ex) =>
+          ex.routineId === routineId ? { ...ex, [field]: value } : ex
+        )
+      );
+    },
+    []
+  );
 
-  const removeExercise = (routineId: string) => {
-    setRoutine(prev => prev.filter(ex => ex.routineId !== routineId));
-  };
+  const removeExercise = React.useCallback((routineId: string) => {
+    setRoutine((prev) => prev.filter((ex) => ex.routineId !== routineId));
+  }, []);
 
+  // Routine card
   const RoutineExerciseCard = ({ exercise }: { exercise: RoutineExercise }) => (
-    <div className="bg-white rounded-lg border border-gray-200">
-      <div 
+    <div
+      className="bg-white rounded-lg border border-gray-200"
+      style={{
+        boxShadow: exercise.isExpanded
+          ? "0 4px 12px rgba(0,0,0,0.05)"
+          : undefined,
+      }}
+    >
+      <div
         className="p-4 cursor-pointer hover:bg-gray-50"
         onClick={() => toggleExerciseExpansion(exercise.routineId)}
+        aria-label="Expand routine exercise"
       >
         <div className="flex items-start gap-3">
-          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
             <video
-              src={exercise.videoUrl}
+              src={exercise.demoUrl ?? ""}
               className="w-full h-full object-cover rounded-lg"
               muted
+              playsInline
+              loop
+              onError={(e) => (e.currentTarget.style.display = "none")}
             />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 text-sm mb-1">{exercise.title}</h3>
+            <h3 className="font-medium text-gray-900 text-sm mb-1">
+              {exercise.title}
+            </h3>
             <div className="text-xs text-gray-600 space-y-1">
-              <div>{exercise.sets} Sets • {exercise.reps} Reps</div>
+              <div>
+                {exercise.sets} Sets • {exercise.reps} Reps
+              </div>
               <div>Weights: {exercise.weights}</div>
               <div>Frequency: {exercise.frequency}</div>
             </div>
             <div className="text-xs text-gray-500 mt-1">
-              <div>{exercise.type}</div>
-              <div>{exercise.muscleTargeted}</div>
-              <div>{exercise.equipment}</div>
+              <div>{exercise.category}</div>
+              <div>
+                {Array.isArray(exercise.targetBodyParts)
+                  ? exercise.targetBodyParts.filter(Boolean).join(", ")
+                  : exercise.targetBodyParts ?? ""}
+              </div>
+              <div>
+                {Array.isArray(exercise.equipment)
+                  ? exercise.equipment.filter(Boolean).join(", ")
+                  : exercise.equipment ?? ""}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -133,6 +225,7 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
                 removeExercise(exercise.routineId);
               }}
               className="text-red-500 hover:text-red-700 text-xs"
+              aria-label="Remove from routine"
             >
               Remove
             </button>
@@ -144,51 +237,98 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
           </div>
         </div>
       </div>
-      
       {exercise.isExpanded && (
         <div className="border-t border-gray-200 p-4 bg-gray-50">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sets</label>
+              <label
+                htmlFor={`sets-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Sets
+              </label>
               <input
+                id={`sets-${exercise.routineId}`}
                 type="number"
                 value={exercise.sets}
-                onChange={(e) => updateExerciseDetails(exercise.routineId, 'sets', parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  updateExerciseDetails(
+                    exercise.routineId,
+                    "sets",
+                    parseInt(e.target.value) || 0
+                  )
+                }
                 className="w-full px-3 text-black py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Input"
+                min={0}
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reps</label>
+              <label
+                htmlFor={`reps-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Reps
+              </label>
               <input
+                id={`reps-${exercise.routineId}`}
                 type="number"
                 value={exercise.reps}
-                onChange={(e) => updateExerciseDetails(exercise.routineId, 'reps', parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  updateExerciseDetails(
+                    exercise.routineId,
+                    "reps",
+                    parseInt(e.target.value) || 0
+                  )
+                }
                 className="w-full px-3 text-black py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Input"
+                min={0}
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+              <label
+                htmlFor={`freq-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Frequency
+              </label>
               <input
+                id={`freq-${exercise.routineId}`}
                 type="text"
                 value={exercise.frequency}
-                onChange={(e) => updateExerciseDetails(exercise.routineId, 'frequency', e.target.value)}
+                onChange={(e) =>
+                  updateExerciseDetails(
+                    exercise.routineId,
+                    "frequency",
+                    e.target.value
+                  )
+                }
                 className="w-full text-black px-3 py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Input"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Weights/Resistance</label>
+              <label
+                htmlFor={`weights-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Weights/Resistance
+              </label>
               <input
+                id={`weights-${exercise.routineId}`}
                 type="number"
                 value={exercise.weights}
-                onChange={(e) => updateExerciseDetails(exercise.routineId, 'weights', parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  updateExerciseDetails(
+                    exercise.routineId,
+                    "weights",
+                    parseInt(e.target.value) || 0
+                  )
+                }
                 className="w-full text-black px-3 py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Input"
+                min={0}
               />
             </div>
           </div>
@@ -197,35 +337,112 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
     </div>
   );
 
+  // Send to patient -- uses minimal mutation
+  const handleSendToPatient = async () => {
+    setSending(true);
+    try {
+      // 1. Get existing plan
+      const existingPlans = await client.graphql<ListPlansQuery>({
+        query: listPlans,
+        variables: {
+          filter: {
+            patientID: { eq: id },
+            status: { eq: "active" },
+          },
+        },
+      });
+      let planId: string;
+      const plans = existingPlans.data?.listPlans?.items?.filter(Boolean);
+      if (plans && plans.length > 0) {
+        planId = plans[0].id!;
+      } else {
+        // 2. Create a plan if none exists
+        const newPlan = await client.graphql<CreatePlanMutation>({
+          query: createPlan,
+          variables: {
+            input: {
+              name: `Custom Plan - ${name}`,
+              status: "active",
+              patientID: id,
+              therapistID: "919b75d0-a031-70af-b33c-ad5059d30922",
+            },
+          },
+        });
+        planId = newPlan.data?.createPlan?.id!;
+      }
+      // 3. Create exercises and plan items
+      for (const exercise of routine) {
+        const createdExercise = await client.graphql<CreateExerciseMutation>({
+          query: createExercise,
+          variables: {
+            input: {
+              title: exercise.title!,
+              prompt: exercise.prompt ?? "",
+              category: exercise.category ?? "",
+              duration: 30,
+              equipment: exercise.equipment ?? [],
+              targetBodyParts: exercise.targetBodyParts ?? [],
+              sets: exercise.sets ?? 3,
+              reps: exercise.reps ?? 10,
+              weight: exercise.weights ?? 0,
+              s3Key: exercise.s3Key ?? "",
+              description: "",
+            },
+          },
+        });
+        const exerciseId = createdExercise.data?.createExercise?.id!;
+        await client.graphql({
+          query: createPlanItemBasic,
+          variables: {
+            input: {
+              planID: planId,
+              exerciseID: exerciseId,
+              sets: exercise.sets ?? 3,
+              reps: exercise.reps ?? 10,
+              restSec: 30,
+            },
+          },
+        });
+      }
+      alert("Routine sent to patient successfully.");
+    } catch (err) {
+      console.error("Error sending routine:", err);
+      alert("Failed to send routine. Check console for details.");
+    }
+    setSending(false);
+  };
+
+  // ---- UI ----
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+          <div className="w-12 h-12 bg-gray-200 rounded-full" />
           <div>
-            <h1 className="text-lg font-semibold text-gray-900"> {name}</h1>
+            <h1 className="text-lg font-semibold text-gray-900">{name}</h1>
             <p className="text-sm text-gray-600">Admission Number: {id}</p>
           </div>
         </div>
       </div>
-
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Design Your Exercise */}
+        {/* Left Sidebar - Routine */}
         <div className="w-80 bg-gray-100 flex flex-col flex-shrink-0">
           <div className="p-4 flex-shrink-0">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Design Your Exercise</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Design Your Exercise
+            </h2>
           </div>
-          
-          {/* Exercise Items - Scrollable */}
           <div className="flex-1 overflow-y-auto px-4">
             <div className="space-y-3 mb-6">
               {routine.map((exercise) => (
-                <RoutineExerciseCard key={exercise.routineId} exercise={exercise} />
+                <RoutineExerciseCard
+                  key={exercise.routineId}
+                  exercise={exercise}
+                />
               ))}
-              
               {routine.length === 0 && (
-                <div 
+                <div
                   className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500"
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
@@ -233,10 +450,8 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
                   Drag exercises here to build your routine
                 </div>
               )}
-              
-              {/* Drop zone for additional exercises */}
               {routine.length > 0 && (
-                <div 
+                <div
                   className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-gray-500 text-sm"
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
@@ -246,8 +461,6 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
               )}
             </div>
           </div>
-
-          {/* Action Buttons */}
           <div className="p-4 flex-shrink-0 border-t border-gray-200">
             <div className="flex gap-2 mb-3">
               <button
@@ -257,35 +470,37 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
                 Cancel
               </button>
               <button
-                onClick={() => console.log('Routine saved', routine)}
+                onClick={() => console.log("Routine saved", routine)}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
               >
                 Save
               </button>
             </div>
             <button
-              onClick={() => console.log('Sending routine to patient', routine)}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+              onClick={handleSendToPatient}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              disabled={sending}
             >
-              Send to Patient
+              {sending ? "Sending..." : "Send to Patient"}
             </button>
           </div>
         </div>
-
-        {/* Right Panel - Exercise Library */}
+        {/* Right Panel - Library */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="p-6 flex-shrink-0">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Exercise Library</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Exercise Library
+              </h2>
               <Link
                 className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-                href={`/dashboard/patients/${id}/exerciseDetails/customExercise${name ? `?name=${encodeURIComponent(name)}` : ''}`}
+                href={`/dashboard/patients/${id}/exerciseDetails/customExercise${
+                  name ? `?name=${encodeURIComponent(name)}` : ""
+                }`}
               >
                 Add Custom Exercise
               </Link>
             </div>
-
-            {/* Search Bar */}
             <div className="mb-4">
               <input
                 type="text"
@@ -293,10 +508,9 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search"
                 className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md text-sm"
+                aria-label="Search exercises"
               />
             </div>
-
-            {/* Filter Tabs */}
             <div className="flex gap-6 mb-6 border-b border-gray-200">
               <button className="pb-2 text-sm font-medium text-gray-900 border-b-2 border-blue-600">
                 Body Part
@@ -308,56 +522,81 @@ export default function ExerciseDetails(props: { params: Promise<{ id: string }>
                 Equipment
               </button>
             </div>
-
-            {/* Body Part Filter Pills */}
             <div className="flex gap-2 mb-6">
-              {['Head', 'Elbow', 'Shoulder', 'Back'].map((part) => (
+              {["Head", "Elbow", "Shoulder", "Back"].map((part) => (
                 <button
                   key={part}
-                  onClick={() => setActiveFilters(prev => ({ ...prev, bodyPart: part }))}
+                  onClick={() =>
+                    setActiveFilters((prev) => ({ ...prev, bodyPart: part }))
+                  }
                   className={`px-3 py-1 rounded-full text-sm font-medium border ${
                     activeFilters.bodyPart === part
-                      ? 'bg-blue-100 border-blue-300 text-blue-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                      ? "bg-blue-100 border-blue-300 text-blue-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
+                  aria-label={`Filter by ${part}`}
                 >
                   {part}
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Exercise Grid - Scrollable */}
           <div className="flex-1 overflow-y-auto px-6 pb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {mockExercises.map((exercise, idx) => (
-                <div
-                  key={exercise.id}
-                  draggable
-                  onDragStart={() => handleDragStart(idx)}
-                  className="cursor-grab active:cursor-grabbing transition-transform hover:scale-105"
-                >
-                  <ExerciseCard
-                    videoUrl={exercise.videoUrl}
-                    title={exercise.title}
-                    subtitle={exercise.subtitle}
-                    type={exercise.type}
-                    muscleTargeted={exercise.muscleTargeted}
-                    equipment={exercise.equipment}
-                  />
-                </div>
-              ))}
-            </div>
+            {loading && (
+              <div className="py-8 text-center text-gray-500">Loading...</div>
+            )}
+            {fetchError && (
+              <div className="py-8 text-center text-red-500">{fetchError}</div>
+            )}
+            {!loading && !fetchError && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredExercises.length === 0 ? (
+                  <div className="text-gray-500 text-center col-span-full">
+                    No exercises found.
+                  </div>
+                ) : (
+                  filteredExercises.map((exercise, idx) => (
+                    <div
+                      key={exercise.id}
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      className="cursor-grab active:cursor-grabbing transition-transform hover:scale-105"
+                      tabIndex={0}
+                      aria-grabbed="false"
+                    >
+                      <ExerciseCard
+                        videoUrl={exercise.demoUrl ?? ""}
+                        title={exercise.title}
+                        subtitle={exercise.prompt ?? ""}
+                        type={exercise.category ?? ""}
+                        muscleTargeted={
+                          Array.isArray(exercise.targetBodyParts)
+                            ? exercise.targetBodyParts
+                                .filter(Boolean)
+                                .join(", ")
+                            : exercise.targetBodyParts ?? ""
+                        }
+                        equipment={
+                          Array.isArray(exercise.equipment)
+                            ? exercise.equipment.filter(Boolean).join(", ")
+                            : exercise.equipment ?? ""
+                        }
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
       <div className="px-6 py-8 mt-10 flex justify-between">
-          <Link
-            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-            href={`/dashboard/patients`}
-          >
-            Previous
-          </Link>
+        <Link
+          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+          href={`/dashboard/patients`}
+        >
+          Previous
+        </Link>
       </div>
     </div>
   );

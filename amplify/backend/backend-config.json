@@ -14,15 +14,15 @@
         "authConfig": {
           "additionalAuthenticationProviders": [
             {
-              "authenticationType": "AWS_IAM"
-            },
-            {
               "apiKeyConfig": {
-                "apiKeyExpirationDate": "2025-07-31T04:52:20.394Z",
-                "apiKeyExpirationDays": 7,
-                "description": ""
+                "apiKeyExpirationDate": "2025-08-08T17:11:30.195Z",
+                "apiKeyExpirationDays": 15,
+                "description": "for lambda"
               },
               "authenticationType": "API_KEY"
+            },
+            {
+              "authenticationType": "AWS_IAM"
             }
           ],
           "defaultAuthentication": {
@@ -72,6 +72,20 @@
       "service": "Lambda"
     },
     "generateExerciseMediaFunction": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "BucketName"
+          ],
+          "category": "storage",
+          "resourceName": "ham"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "getVideoUrlFunction": {
       "build": true,
       "dependsOn": [
         {
@@ -201,6 +215,22 @@
         {
           "category": "function",
           "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_getVideoUrlFunction_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "getVideoUrlFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_getVideoUrlFunction_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "getVideoUrlFunction"
         }
       ]
     },

@@ -85,6 +85,7 @@ export const getExercise = /* GraphQL */ `query GetExercise($id: ID!) {
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -117,6 +118,7 @@ export const listExercises = /* GraphQL */ `query ListExercises(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -137,6 +139,7 @@ export const getVideoJob = /* GraphQL */ `query GetVideoJob($id: ID!) {
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -161,6 +164,7 @@ export const listVideoJobs = /* GraphQL */ `query ListVideoJobs(
       status
       prompt
       videoUrl
+      s3Key
       created_at
       updated_at
       createdAt
@@ -359,6 +363,7 @@ export const getPlanItem = /* GraphQL */ `query GetPlanItem($id: ID!) {
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
