@@ -27,6 +27,7 @@ export default function VideoJobCreateForm(props) {
     status: "",
     prompt: "",
     videoUrl: "",
+    s3Key: "",
     created_at: "",
     updated_at: "",
   };
@@ -34,6 +35,7 @@ export default function VideoJobCreateForm(props) {
   const [status, setStatus] = React.useState(initialValues.status);
   const [prompt, setPrompt] = React.useState(initialValues.prompt);
   const [videoUrl, setVideoUrl] = React.useState(initialValues.videoUrl);
+  const [s3Key, setS3Key] = React.useState(initialValues.s3Key);
   const [created_at, setCreated_at] = React.useState(initialValues.created_at);
   const [updated_at, setUpdated_at] = React.useState(initialValues.updated_at);
   const [errors, setErrors] = React.useState({});
@@ -42,6 +44,7 @@ export default function VideoJobCreateForm(props) {
     setStatus(initialValues.status);
     setPrompt(initialValues.prompt);
     setVideoUrl(initialValues.videoUrl);
+    setS3Key(initialValues.s3Key);
     setCreated_at(initialValues.created_at);
     setUpdated_at(initialValues.updated_at);
     setErrors({});
@@ -51,6 +54,7 @@ export default function VideoJobCreateForm(props) {
     status: [{ type: "Required" }],
     prompt: [{ type: "Required" }],
     videoUrl: [],
+    s3Key: [],
     created_at: [{ type: "Required" }],
     updated_at: [],
   };
@@ -84,6 +88,7 @@ export default function VideoJobCreateForm(props) {
           status,
           prompt,
           videoUrl,
+          s3Key,
           created_at,
           updated_at,
         };
@@ -152,6 +157,7 @@ export default function VideoJobCreateForm(props) {
               status,
               prompt,
               videoUrl,
+              s3Key,
               created_at,
               updated_at,
             };
@@ -181,6 +187,7 @@ export default function VideoJobCreateForm(props) {
               status: value,
               prompt,
               videoUrl,
+              s3Key,
               created_at,
               updated_at,
             };
@@ -210,6 +217,7 @@ export default function VideoJobCreateForm(props) {
               status,
               prompt: value,
               videoUrl,
+              s3Key,
               created_at,
               updated_at,
             };
@@ -239,6 +247,7 @@ export default function VideoJobCreateForm(props) {
               status,
               prompt,
               videoUrl: value,
+              s3Key,
               created_at,
               updated_at,
             };
@@ -254,6 +263,36 @@ export default function VideoJobCreateForm(props) {
         errorMessage={errors.videoUrl?.errorMessage}
         hasError={errors.videoUrl?.hasError}
         {...getOverrideProps(overrides, "videoUrl")}
+      ></TextField>
+      <TextField
+        label="S3 key"
+        isRequired={false}
+        isReadOnly={false}
+        value={s3Key}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              userId,
+              status,
+              prompt,
+              videoUrl,
+              s3Key: value,
+              created_at,
+              updated_at,
+            };
+            const result = onChange(modelFields);
+            value = result?.s3Key ?? value;
+          }
+          if (errors.s3Key?.hasError) {
+            runValidationTasks("s3Key", value);
+          }
+          setS3Key(value);
+        }}
+        onBlur={() => runValidationTasks("s3Key", s3Key)}
+        errorMessage={errors.s3Key?.errorMessage}
+        hasError={errors.s3Key?.hasError}
+        {...getOverrideProps(overrides, "s3Key")}
       ></TextField>
       <TextField
         label="Created at"
@@ -272,6 +311,7 @@ export default function VideoJobCreateForm(props) {
               status,
               prompt,
               videoUrl,
+              s3Key,
               created_at: value,
               updated_at,
             };
@@ -305,6 +345,7 @@ export default function VideoJobCreateForm(props) {
               status,
               prompt,
               videoUrl,
+              s3Key,
               created_at,
               updated_at: value,
             };

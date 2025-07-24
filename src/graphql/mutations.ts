@@ -222,6 +222,7 @@ export const createVideoJob = /* GraphQL */ `mutation CreateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -244,6 +245,7 @@ export const updateVideoJob = /* GraphQL */ `mutation UpdateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -266,6 +268,7 @@ export const deleteVideoJob = /* GraphQL */ `mutation DeleteVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt

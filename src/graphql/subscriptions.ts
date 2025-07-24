@@ -8,6 +8,26 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
+export const onUpdateVideoJobById = /* GraphQL */ `subscription OnUpdateVideoJobById($id: ID!) {
+  onUpdateVideoJobById(id: $id) {
+    id
+    userId
+    status
+    prompt
+    videoUrl
+    s3Key
+    created_at
+    updated_at
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVideoJobByIdSubscriptionVariables,
+  APITypes.OnUpdateVideoJobByIdSubscription
+>;
 export const onCreateUser = /* GraphQL */ `subscription OnCreateUser(
   $filter: ModelSubscriptionUserFilterInput
   $owner: String
@@ -213,6 +233,7 @@ export const onCreateVideoJob = /* GraphQL */ `subscription OnCreateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -235,6 +256,7 @@ export const onUpdateVideoJob = /* GraphQL */ `subscription OnUpdateVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -257,6 +279,7 @@ export const onDeleteVideoJob = /* GraphQL */ `subscription OnDeleteVideoJob(
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt

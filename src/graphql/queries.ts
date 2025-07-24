@@ -137,6 +137,7 @@ export const getVideoJob = /* GraphQL */ `query GetVideoJob($id: ID!) {
     status
     prompt
     videoUrl
+    s3Key
     created_at
     updated_at
     createdAt
@@ -161,6 +162,7 @@ export const listVideoJobs = /* GraphQL */ `query ListVideoJobs(
       status
       prompt
       videoUrl
+      s3Key
       created_at
       updated_at
       createdAt

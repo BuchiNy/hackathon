@@ -26,6 +26,7 @@ export declare type VideoJobCreateFormInputValues = {
     status?: string;
     prompt?: string;
     videoUrl?: string;
+    s3Key?: string;
     created_at?: number;
     updated_at?: number;
 };
@@ -34,6 +35,7 @@ export declare type VideoJobCreateFormValidationValues = {
     status?: ValidationFunction<string>;
     prompt?: ValidationFunction<string>;
     videoUrl?: ValidationFunction<string>;
+    s3Key?: ValidationFunction<string>;
     created_at?: ValidationFunction<number>;
     updated_at?: ValidationFunction<number>;
 };
@@ -44,6 +46,7 @@ export declare type VideoJobCreateFormOverridesProps = {
     status?: PrimitiveOverrideProps<TextFieldProps>;
     prompt?: PrimitiveOverrideProps<TextFieldProps>;
     videoUrl?: PrimitiveOverrideProps<TextFieldProps>;
+    s3Key?: PrimitiveOverrideProps<TextFieldProps>;
     created_at?: PrimitiveOverrideProps<TextFieldProps>;
     updated_at?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
