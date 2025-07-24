@@ -1,5 +1,7 @@
 {
-  "whyContinueWithGen1": "Gen 2 is missing features I need from Gen 1",
+  "providers": [
+    "awscloudformation"
+  ],
   "projectName": "ham",
   "version": "3.1",
   "frontend": "javascript",
@@ -8,11 +10,8 @@
     "config": {
       "SourceDir": "src",
       "DistributionDir": "build",
-      "BuildCommand": "npm run-script build",
-      "StartCommand": "npm run-script start"
+      "BuildCommand": "npm.cmd run-script build",
+      "StartCommand": "npm.cmd run-script start"
     }
-  },
-  "providers": [
-    "awscloudformation"
-  ]
+  }
 }

@@ -84,6 +84,43 @@
       ],
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
+    },
+    "pollJobStatus": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput",
+            "GraphQLAPIKeyOutput"
+          ],
+          "category": "api",
+          "resourceName": "ham"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "retrieveAndStoreS3": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "BucketName"
+          ],
+          "category": "storage",
+          "resourceName": "ham"
+        },
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "ham"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
     }
   },
   "parameters": {
@@ -111,7 +148,23 @@
         }
       ]
     },
+    "AMPLIFY_function_generateExerciseMediaFunction_azureOpenaiEndpoint": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
     "AMPLIFY_function_generateExerciseMediaFunction_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_generateExerciseMediaFunction_deploymentName": {
       "usedBy": [
         {
           "category": "function",
@@ -148,6 +201,78 @@
         {
           "category": "function",
           "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_pollJobStatus_azureOpenaiEndpoint": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "pollJobStatus"
+        }
+      ]
+    },
+    "AMPLIFY_function_pollJobStatus_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "pollJobStatus"
+        }
+      ]
+    },
+    "AMPLIFY_function_pollJobStatus_name": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "pollJobStatus"
+        }
+      ]
+    },
+    "AMPLIFY_function_pollJobStatus_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "pollJobStatus"
+        }
+      ]
+    },
+    "AMPLIFY_function_pollJobStatus_secretsPathAmplifyAppId": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "pollJobStatus"
+        }
+      ]
+    },
+    "AMPLIFY_function_retrieveAndStoreS3_azureApiKey": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "retrieveAndStoreS3"
+        }
+      ]
+    },
+    "AMPLIFY_function_retrieveAndStoreS3_azureOpenaiEndpoint": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "retrieveAndStoreS3"
+        }
+      ]
+    },
+    "AMPLIFY_function_retrieveAndStoreS3_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "retrieveAndStoreS3"
+        }
+      ]
+    },
+    "AMPLIFY_function_retrieveAndStoreS3_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "retrieveAndStoreS3"
         }
       ]
     }
