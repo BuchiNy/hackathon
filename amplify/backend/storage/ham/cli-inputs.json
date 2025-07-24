@@ -1,0 +1,13 @@
+{
+  "resourceName": "ham",
+  "policyUUID": "82958ba8",
+  "bucketName": "ham5bcf3ecee7844d599295fdb17c3246a4",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ"
+  ],
+  "triggerFunction": "S3Triggere3b7ffe3",
+  "groupAccess": {}
+}

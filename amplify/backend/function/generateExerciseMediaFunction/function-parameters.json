@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "storage": {
+      "ham": [
+        "create",
+        "read",
+        "update"
+      ]
+    }
+  },
+  "lambdaLayers": [],
+  "environmentVariableList": [
+    {
+      "cloudFormationParameterName": "soraApiKey",
+      "environmentVariableName": "SORA_API_KEY"
+    },
+    {
+      "cloudFormationParameterName": "soraApiUrl",
+      "environmentVariableName": "SORA_API_URL"
+    },
+    {
+      "cloudFormationParameterName": "azureApiKey",
+      "environmentVariableName": "AZURE_API_KEY"
+    }
+  ],
+  "secretNames": [
+    "SORA_API_KEY"
+  ]
+}

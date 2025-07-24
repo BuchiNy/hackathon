@@ -63,4 +63,4 @@ amplifytools.xcconfig
 #amplify-do-not-edit-end
 /.vscode
 amplify/team-provider-info.json
-/amplify
+
