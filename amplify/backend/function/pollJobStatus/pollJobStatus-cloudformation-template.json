@@ -16,26 +16,25 @@
     "s3Key": {
       "Type": "String"
     },
-    "soraApiKey": {
-      "Type": "String"
-    },
-    "storagehamBucketName": {
+    "apihamGraphQLAPIIdOutput": {
       "Type": "String",
-      "Default": "storagehamBucketName"
+      "Default": "apihamGraphQLAPIIdOutput"
     },
     "secretsPathAmplifyAppId": {
       "Type": "String"
     },
-    "soraApiUrl": {
-      "Type": "String"
+    "apihamGraphQLAPIEndpointOutput": {
+      "Type": "String",
+      "Default": "apihamGraphQLAPIEndpointOutput"
     },
-    "azureApiKey": {
-      "Type": "String"
-    },
-    "deploymentName": {
-      "Type": "String"
+    "apihamGraphQLAPIKeyOutput": {
+      "Type": "String",
+      "Default": "apihamGraphQLAPIKeyOutput"
     },
     "azureOpenaiEndpoint": {
+      "Type": "String"
+    },
+    "name": {
       "Type": "String"
     }
   },
@@ -69,12 +68,12 @@
         "FunctionName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",
-            "generateExerciseMediaFunction",
+            "pollJobStatus",
             {
               "Fn::Join": [
                 "",
                 [
-                  "generateExerciseMediaFunction",
+                  "pollJobStatus",
                   "-",
                   {
                     "Ref": "env"
@@ -92,10 +91,36 @@
             "REGION": {
               "Ref": "AWS::Region"
             },
-            "STORAGE_HAM_BUCKETNAME": {
-              "Ref": "storagehamBucketName"
+            "API_HAM_VIDEOJOBTABLE_NAME": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${apihamGraphQLAPIIdOutput}:GetAtt:VideoJobTable:Name"
+              }
             },
-            "SORA_API_KEY": {
+            "API_HAM_VIDEOJOBTABLE_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:aws:dynamodb:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":table/",
+                  {
+                    "Fn::ImportValue": {
+                      "Fn::Sub": "${apihamGraphQLAPIIdOutput}:GetAtt:VideoJobTable:Name"
+                    }
+                  }
+                ]
+              ]
+            },
+            "API_HAM_GRAPHQLAPIIDOUTPUT": {
+              "Ref": "apihamGraphQLAPIIdOutput"
+            },
+            "AZURE_API_KEY": {
               "Fn::Join": [
                 "",
                 [
@@ -109,25 +134,25 @@
                         "env": {
                           "Ref": "env"
                         },
-                        "functionName": "generateExerciseMediaFunction"
+                        "functionName": "pollJobStatus"
                       }
                     ]
                   },
-                  "SORA_API_KEY"
+                  "AZURE_API_KEY"
                 ]
               ]
             },
-            "SORA_API_URL": {
-              "Ref": "soraApiUrl"
+            "API_HAM_GRAPHQLAPIENDPOINTOUTPUT": {
+              "Ref": "apihamGraphQLAPIEndpointOutput"
             },
-            "AZURE_API_KEY": {
-              "Ref": "azureApiKey"
-            },
-            "DEPLOYMENT_NAME": {
-              "Ref": "deploymentName"
+            "API_HAM_GRAPHQLAPIKEYOUTPUT": {
+              "Ref": "apihamGraphQLAPIKeyOutput"
             },
             "AZURE_OPENAI_ENDPOINT": {
               "Ref": "azureOpenaiEndpoint"
+            },
+            "NAME": {
+              "Ref": "name"
             }
           }
         },
@@ -148,12 +173,12 @@
         "RoleName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",
-            "hamLambdaRolef689d578",
+            "hamLambdaRoleff61a62e",
             {
               "Fn::Join": [
                 "",
                 [
-                  "hamLambdaRolef689d578",
+                  "hamLambdaRoleff61a62e",
                   "-",
                   {
                     "Ref": "env"
@@ -241,16 +266,67 @@
           "Statement": [
             {
               "Effect": "Allow",
-              "Action": "s3:ListBucket",
+              "Action": [
+                "appsync:GraphQL"
+              ],
               "Resource": [
                 {
                   "Fn::Join": [
                     "",
                     [
-                      "arn:aws:s3:::",
+                      "arn:aws:appsync:",
                       {
-                        "Ref": "storagehamBucketName"
-                      }
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":apis/",
+                      {
+                        "Ref": "apihamGraphQLAPIIdOutput"
+                      },
+                      "/types/Query/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:appsync:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":apis/",
+                      {
+                        "Ref": "apihamGraphQLAPIIdOutput"
+                      },
+                      "/types/Mutation/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:appsync:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":apis/",
+                      {
+                        "Ref": "apihamGraphQLAPIIdOutput"
+                      },
+                      "/types/Subscription/*"
                     ]
                   ]
                 }
@@ -259,19 +335,64 @@
             {
               "Effect": "Allow",
               "Action": [
-                "s3:PutObject",
-                "s3:GetObject"
+                "dynamodb:Put*",
+                "dynamodb:Create*",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PartiQLInsert",
+                "dynamodb:Get*",
+                "dynamodb:BatchGetItem",
+                "dynamodb:List*",
+                "dynamodb:Describe*",
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:PartiQLSelect",
+                "dynamodb:Update*",
+                "dynamodb:RestoreTable*",
+                "dynamodb:PartiQLUpdate",
+                "dynamodb:Delete*",
+                "dynamodb:PartiQLDelete"
               ],
               "Resource": [
                 {
                   "Fn::Join": [
                     "",
                     [
-                      "arn:aws:s3:::",
+                      "arn:aws:dynamodb:",
                       {
-                        "Ref": "storagehamBucketName"
+                        "Ref": "AWS::Region"
                       },
-                      "/*"
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":table/",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${apihamGraphQLAPIIdOutput}:GetAtt:VideoJobTable:Name"
+                        }
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:dynamodb:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":table/",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${apihamGraphQLAPIIdOutput}:GetAtt:VideoJobTable:Name"
+                        }
+                      },
+                      "/index/*"
                     ]
                   ]
                 }
@@ -322,7 +443,7 @@
                           "env": {
                             "Ref": "env"
                           },
-                          "functionName": "generateExerciseMediaFunction"
+                          "functionName": "pollJobStatus"
                         }
                       ]
                     },

@@ -10,7 +10,6 @@ type User
   name: String!
   email: AWSEmail!
   role: String! # "doctor" or "patient"
-  # Patient-specific fields
   age: Int
   gender: String
   injuryHistory: String
@@ -22,8 +21,6 @@ type User
   availableEquipment: [String]
   preferredTime: String
   reminderEnabled: Boolean
-
-  # Relationships
   assignedPlans: [Plan] @hasMany(indexName: "byPatient", fields: ["id"])
   createdPlans: [Plan] @hasMany(indexName: "byTherapist", fields: ["id"])
 }
@@ -52,8 +49,24 @@ type Exercise
   description: String
   demoUrl: String
   createdAt: AWSDateTime
-
   usedInPlanItems: [PlanItem] @hasMany(indexName: "byExercise", fields: ["id"])
+}
+
+type VideoJob
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: groups, groups: ["doctor"], operations: [read, create, update] }
+    ]
+  ) {
+  id: ID! # Maps to DynamoDB jobId
+  userId: String!
+  status: String!
+  prompt: String!
+  videoUrl: String
+  created_at: Int!
+  updated_at: Int
 }
 
 type Plan
@@ -89,7 +102,6 @@ type PlanItem
   sets: Int
   reps: Int
   restSec: Int
-
   plan: Plan @belongsTo(fields: ["planID"])
   exercise: Exercise @belongsTo(fields: ["exerciseID"])
 }
@@ -133,6 +145,7 @@ type Mutation {
 
 type GenerationStatus {
   status: String!
+  jobId: ID
   gifUrl: String
   error: String
 }

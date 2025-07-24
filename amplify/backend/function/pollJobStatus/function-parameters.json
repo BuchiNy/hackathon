@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "api": {
+      "ham": [
+        "Query",
+        "Mutation",
+        "Subscription"
+      ]
+    },
+    "storage": {
+      "VideoJob:@model(appsync)": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ]
+    }
+  },
+  "lambdaLayers": [],
+  "environmentVariableList": [
+    {
+      "cloudFormationParameterName": "azureOpenaiEndpoint",
+      "environmentVariableName": "AZURE_OPENAI_ENDPOINT"
+    },
+    {
+      "cloudFormationParameterName": "name",
+      "environmentVariableName": "NAME"
+    }
+  ],
+  "secretNames": [
+    "AZURE_API_KEY"
+  ]
+}
