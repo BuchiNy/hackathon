@@ -1,0 +1,138 @@
+type User
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: groups, groups: ["doctor"], operations: [read, update] }
+    ]
+  ) {
+  id: ID!
+  name: String!
+  email: AWSEmail!
+  role: String! # "doctor" or "patient"
+  # Patient-specific fields
+  age: Int
+  gender: String
+  injuryHistory: String
+  conditions: [String]
+  goals: [String]
+  mobilityLevel: String
+  painScale: Int
+  targetBodyParts: [String]
+  availableEquipment: [String]
+  preferredTime: String
+  reminderEnabled: Boolean
+
+  # Relationships
+  assignedPlans: [Plan] @hasMany(indexName: "byPatient", fields: ["id"])
+  createdPlans: [Plan] @hasMany(indexName: "byTherapist", fields: ["id"])
+}
+
+type Exercise
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["doctor"]
+        operations: [create, update, delete, read]
+      }
+    ]
+  ) {
+  id: ID!
+  title: String!
+  category: String
+  equipment: [String]
+  targetBodyParts: [String]
+  duration: Int
+  prompt: String
+  reps: Int
+  sets: Int
+  weight: Float
+  description: String
+  demoUrl: String
+  createdAt: AWSDateTime
+
+  usedInPlanItems: [PlanItem] @hasMany(indexName: "byExercise", fields: ["id"])
+}
+
+type Plan
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: groups, groups: ["doctor"], operations: [read, create, update] }
+    ]
+  ) {
+  id: ID!
+  name: String!
+  therapistID: ID! @index(name: "byTherapist", sortKeyFields: ["createdAt"])
+  patientID: ID! @index(name: "byPatient", sortKeyFields: ["createdAt"])
+  createdAt: AWSDateTime
+  status: String! # active | completed | archived
+  therapist: User @belongsTo(fields: ["therapistID"])
+  patient: User @belongsTo(fields: ["patientID"])
+  items: [PlanItem] @hasMany(indexName: "byPlan", fields: ["id"])
+}
+
+type PlanItem
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: groups, groups: ["doctor"], operations: [read, create, update] }
+    ]
+  ) {
+  id: ID!
+  planID: ID! @index(name: "byPlan", sortKeyFields: ["id"])
+  exerciseID: ID! @index(name: "byExercise", sortKeyFields: ["id"])
+  sets: Int
+  reps: Int
+  restSec: Int
+
+  plan: Plan @belongsTo(fields: ["planID"])
+  exercise: Exercise @belongsTo(fields: ["exerciseID"])
+}
+
+type ExerciseLog
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: groups, groups: ["doctor"], operations: [read] }
+    ]
+  ) {
+  id: ID!
+  patientID: ID! @index(name: "byPatient", sortKeyFields: ["completedAt"])
+  planID: ID!
+  planItemID: ID!
+  completedAt: AWSDateTime!
+  formScore: Float
+}
+
+type Message
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: groups, groups: ["doctor"], operations: [read, create] }
+    ]
+  ) {
+  id: ID!
+  fromID: ID!
+  toID: ID!
+  content: String!
+  createdAt: AWSDateTime!
+}
+
+type Mutation {
+  generateExerciseMedia(prompt: String!): GenerationStatus
+    @auth(rules: [{ allow: groups, groups: ["doctor"] }])
+    @function(name: "generateExerciseMediaFunction-${env}")
+}
+
+type GenerationStatus {
+  status: String!
+  gifUrl: String
+  error: String
+}

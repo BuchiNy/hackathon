@@ -1,0 +1,172 @@
+{
+  "api": {
+    "ham": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "hamb453ae38"
+        }
+      ],
+      "output": {
+        "authConfig": {
+          "additionalAuthenticationProviders": [
+            {
+              "authenticationType": "AWS_IAM"
+            },
+            {
+              "apiKeyConfig": {
+                "apiKeyExpirationDate": "2025-07-31T04:52:20.394Z",
+                "apiKeyExpirationDays": 7,
+                "description": ""
+              },
+              "authenticationType": "API_KEY"
+            }
+          ],
+          "defaultAuthentication": {
+            "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+            "userPoolConfig": {
+              "userPoolId": "authhamb453ae38"
+            }
+          }
+        }
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "AppSync"
+    }
+  },
+  "auth": {
+    "hamb453ae38": {
+      "customAuth": false,
+      "dependsOn": [],
+      "frontendAuthConfig": {
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyCharacters": [],
+          "passwordPolicyMinLength": 8
+        },
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "socialProviders": [],
+        "usernameAttributes": [
+          "EMAIL"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito"
+    }
+  },
+  "function": {
+    "S3Triggere3b7ffe3": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "generateExerciseMediaFunction": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "BucketName"
+          ],
+          "category": "storage",
+          "resourceName": "ham"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_S3Triggere3b7ffe3_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Triggere3b7ffe3"
+        }
+      ]
+    },
+    "AMPLIFY_function_S3Triggere3b7ffe3_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "S3Triggere3b7ffe3"
+        }
+      ]
+    },
+    "AMPLIFY_function_generateExerciseMediaFunction_azureApiKey": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_generateExerciseMediaFunction_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_generateExerciseMediaFunction_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_generateExerciseMediaFunction_secretsPathAmplifyAppId": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_generateExerciseMediaFunction_soraApiKey": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    },
+    "AMPLIFY_function_generateExerciseMediaFunction_soraApiUrl": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "generateExerciseMediaFunction"
+        }
+      ]
+    }
+  },
+  "storage": {
+    "ham": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn",
+            "LambdaExecutionRole"
+          ],
+          "category": "function",
+          "resourceName": "S3Triggere3b7ffe3"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "S3"
+    }
+  }
+}
