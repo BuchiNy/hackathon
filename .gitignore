@@ -66,3 +66,4 @@ amplifytools.xcconfig
 #amplify-do-not-edit-end
 /amplify
 /src/graphql
+/src/ui-components

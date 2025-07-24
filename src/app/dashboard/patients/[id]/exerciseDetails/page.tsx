@@ -3,13 +3,34 @@
 import React from "react";
 import { useSearchParams } from "next/navigation";
 import { generateClient } from "aws-amplify/api";
-import { listExercises } from "@/graphql/queries";
-import type { ListExercisesQuery, Exercise as ExerciseType } from "@/API";
+import { listExercises, listPlans } from "@/graphql/queries";
+import { createPlan, createExercise } from "@/graphql/mutations";
+import type {
+  ListExercisesQuery,
+  Exercise as ExerciseType,
+  CreatePlanMutation,
+  CreateExerciseMutation,
+  ListPlansQuery,
+} from "@/API";
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import ExerciseCard from "../../../libs/components/exerciseCard";
 import Link from "next/link";
+
+// *** Custom minimal mutation for PlanItem ***
+const createPlanItemBasic = /* GraphQL */ `
+  mutation CreatePlanItem($input: CreatePlanItemInput!) {
+    createPlanItem(input: $input) {
+      id
+      planID
+      exerciseID
+      sets
+      reps
+      restSec
+    }
+  }
+`;
 
 interface RoutineExercise extends ExerciseType {
   routineId: string;
@@ -20,10 +41,11 @@ interface RoutineExercise extends ExerciseType {
   frequency?: string;
 }
 
-export default function ExerciseDetails(props: {
-  params: Promise<{ id: string }>;
+export default function ExerciseDetails({
+  params,
+}: {
+  params: { id: string };
 }) {
-  const params = React.use(props.params);
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
   const id = params.id;
@@ -40,95 +62,137 @@ export default function ExerciseDetails(props: {
     equipment: "",
   });
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
+  const [sending, setSending] = React.useState(false);
 
   const dragItemIndex = React.useRef<number | null>(null);
 
+  // Fetch exercises on mount
   React.useEffect(() => {
     const fetchExercises = async () => {
+      setLoading(true);
+      setFetchError(null);
       try {
         const result = await client.graphql<ListExercisesQuery>({
           query: listExercises,
         });
-
         if ("data" in result && result.data?.listExercises?.items) {
           const exercises =
             result.data.listExercises.items?.filter(Boolean) ?? [];
-          setLibraryExercises(exercises); // ✅ Now always an array
+          setLibraryExercises(exercises);
         } else {
           setLibraryExercises([]);
         }
       } catch (err) {
-        console.error("Error fetching exercises:", err);
+        setFetchError("Failed to fetch exercises.");
         setLibraryExercises([]);
       }
+      setLoading(false);
     };
-
     fetchExercises();
+    // eslint-disable-next-line
   }, []);
 
-  const handleDragStart = (idx: number) => {
+  // Filtering logic for library
+  const filteredExercises = React.useMemo(() => {
+    return libraryExercises.filter((ex) => {
+      const bodyParts = Array.isArray(ex.targetBodyParts)
+        ? ex.targetBodyParts
+        : [ex.targetBodyParts];
+      const matchesBodyPart =
+        !activeFilters.bodyPart || bodyParts.includes(activeFilters.bodyPart);
+
+      const matchesSearch =
+        !searchTerm ||
+        ex.title?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesBodyPart && matchesSearch;
+    });
+  }, [libraryExercises, activeFilters, searchTerm]);
+
+  // Drag handlers
+  const handleDragStart = React.useCallback((idx: number) => {
     dragItemIndex.current = idx;
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
+  const handleDragOver = React.useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+    },
+    []
+  );
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (dragItemIndex.current !== null) {
-      const exercise = libraryExercises[dragItemIndex.current];
-      const routineId = `routine-${Date.now()}-${Math.random()}`;
-      const exerciseWithDetails: RoutineExercise = {
-        ...exercise,
-        routineId,
-        sets: 3,
-        reps: 10,
-        weights: 4,
-        frequency: "Daily",
-        isExpanded: false,
-      };
-      setRoutine((prev) => [...prev, exerciseWithDetails]);
-      dragItemIndex.current = null;
-    }
-  };
+  const handleDrop = React.useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      if (dragItemIndex.current !== null) {
+        const exercise = filteredExercises[dragItemIndex.current];
+        const routineId = `routine-${Date.now()}-${Math.random()}`;
+        const exerciseWithDetails: RoutineExercise = {
+          ...exercise,
+          routineId,
+          sets: 3,
+          reps: 10,
+          weights: 4,
+          frequency: "Daily",
+          isExpanded: false,
+        };
+        setRoutine((prev) => [...prev, exerciseWithDetails]);
+        dragItemIndex.current = null;
+      }
+    },
+    [filteredExercises]
+  );
 
-  const toggleExerciseExpansion = (routineId: string) => {
+  // Routine editing handlers
+  const toggleExerciseExpansion = React.useCallback((routineId: string) => {
     setRoutine((prev) =>
       prev.map((ex) =>
         ex.routineId === routineId ? { ...ex, isExpanded: !ex.isExpanded } : ex
       )
     );
-  };
+  }, []);
 
-  const updateExerciseDetails = (
-    routineId: string,
-    field: string,
-    value: string | number
-  ) => {
-    setRoutine((prev) =>
-      prev.map((ex) =>
-        ex.routineId === routineId ? { ...ex, [field]: value } : ex
-      )
-    );
-  };
+  const updateExerciseDetails = React.useCallback(
+    (routineId: string, field: string, value: string | number) => {
+      setRoutine((prev) =>
+        prev.map((ex) =>
+          ex.routineId === routineId ? { ...ex, [field]: value } : ex
+        )
+      );
+    },
+    []
+  );
 
-  const removeExercise = (routineId: string) => {
+  const removeExercise = React.useCallback((routineId: string) => {
     setRoutine((prev) => prev.filter((ex) => ex.routineId !== routineId));
-  };
+  }, []);
 
+  // Routine card
   const RoutineExerciseCard = ({ exercise }: { exercise: RoutineExercise }) => (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div
+      className="bg-white rounded-lg border border-gray-200"
+      style={{
+        boxShadow: exercise.isExpanded
+          ? "0 4px 12px rgba(0,0,0,0.05)"
+          : undefined,
+      }}
+    >
       <div
         className="p-4 cursor-pointer hover:bg-gray-50"
         onClick={() => toggleExerciseExpansion(exercise.routineId)}
+        aria-label="Expand routine exercise"
       >
         <div className="flex items-start gap-3">
-          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
             <video
               src={exercise.demoUrl ?? ""}
               className="w-full h-full object-cover rounded-lg"
               muted
+              playsInline
+              loop
+              onError={(e) => (e.currentTarget.style.display = "none")}
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -149,7 +213,11 @@ export default function ExerciseDetails(props: {
                   ? exercise.targetBodyParts.filter(Boolean).join(", ")
                   : exercise.targetBodyParts ?? ""}
               </div>
-              <div>{exercise.equipment}</div>
+              <div>
+                {Array.isArray(exercise.equipment)
+                  ? exercise.equipment.filter(Boolean).join(", ")
+                  : exercise.equipment ?? ""}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -159,6 +227,7 @@ export default function ExerciseDetails(props: {
                 removeExercise(exercise.routineId);
               }}
               className="text-red-500 hover:text-red-700 text-xs"
+              aria-label="Remove from routine"
             >
               Remove
             </button>
@@ -170,15 +239,18 @@ export default function ExerciseDetails(props: {
           </div>
         </div>
       </div>
-
       {exercise.isExpanded && (
         <div className="border-t border-gray-200 p-4 bg-gray-50">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor={`sets-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Sets
               </label>
               <input
+                id={`sets-${exercise.routineId}`}
                 type="number"
                 value={exercise.sets}
                 onChange={(e) =>
@@ -190,14 +262,18 @@ export default function ExerciseDetails(props: {
                 }
                 className="w-full px-3 text-black py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Input"
+                min={0}
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor={`reps-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Reps
               </label>
               <input
+                id={`reps-${exercise.routineId}`}
                 type="number"
                 value={exercise.reps}
                 onChange={(e) =>
@@ -209,14 +285,18 @@ export default function ExerciseDetails(props: {
                 }
                 className="w-full px-3 text-black py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Input"
+                min={0}
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor={`freq-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Frequency
               </label>
               <input
+                id={`freq-${exercise.routineId}`}
                 type="text"
                 value={exercise.frequency}
                 onChange={(e) =>
@@ -230,12 +310,15 @@ export default function ExerciseDetails(props: {
                 placeholder="Input"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor={`weights-${exercise.routineId}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Weights/Resistance
               </label>
               <input
+                id={`weights-${exercise.routineId}`}
                 type="number"
                 value={exercise.weights}
                 onChange={(e) =>
@@ -247,6 +330,7 @@ export default function ExerciseDetails(props: {
                 }
                 className="w-full text-black px-3 py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Input"
+                min={0}
               />
             </div>
           </div>
@@ -255,19 +339,94 @@ export default function ExerciseDetails(props: {
     </div>
   );
 
+  // Send to patient -- uses minimal mutation
+  const handleSendToPatient = async () => {
+    setSending(true);
+    try {
+      // 1. Get existing plan
+      const existingPlans = await client.graphql<ListPlansQuery>({
+        query: listPlans,
+        variables: {
+          filter: {
+            patientID: { eq: id },
+            status: { eq: "active" },
+          },
+        },
+      });
+      let planId: string;
+      const plans = existingPlans.data?.listPlans?.items?.filter(Boolean);
+      if (plans && plans.length > 0) {
+        planId = plans[0].id!;
+      } else {
+        // 2. Create a plan if none exists
+        const newPlan = await client.graphql<CreatePlanMutation>({
+          query: createPlan,
+          variables: {
+            input: {
+              name: `Custom Plan - ${name}`,
+              status: "active",
+              patientID: id,
+              therapistID: "919b75d0-a031-70af-b33c-ad5059d30922",
+            },
+          },
+        });
+        planId = newPlan.data?.createPlan?.id!;
+      }
+      // 3. Create exercises and plan items
+      for (const exercise of routine) {
+        const createdExercise = await client.graphql<CreateExerciseMutation>({
+          query: createExercise,
+          variables: {
+            input: {
+              title: exercise.title!,
+              prompt: exercise.prompt ?? "",
+              category: exercise.category ?? "",
+              duration: 30,
+              equipment: exercise.equipment ?? [],
+              targetBodyParts: exercise.targetBodyParts ?? [],
+              sets: exercise.sets ?? 3,
+              reps: exercise.reps ?? 10,
+              weight: exercise.weights ?? 0,
+              s3Key: exercise.s3Key ?? "",
+              description: "",
+            },
+          },
+        });
+        const exerciseId = createdExercise.data?.createExercise?.id!;
+        await client.graphql({
+          query: createPlanItemBasic, // <-- Only direct fields
+          variables: {
+            input: {
+              planID: planId,
+              exerciseID: exerciseId,
+              sets: exercise.sets ?? 3,
+              reps: exercise.reps ?? 10,
+              restSec: 30,
+            },
+          },
+        });
+      }
+      alert("Routine sent to patient successfully.");
+    } catch (err) {
+      console.error("Error sending routine:", err);
+      alert("Failed to send routine. Check console for details.");
+    }
+    setSending(false);
+  };
+
+  // ---- UI ----
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+          <div className="w-12 h-12 bg-gray-200 rounded-full" />
           <div>
-            <h1 className="text-lg font-semibold text-gray-900"> {name}</h1>
+            <h1 className="text-lg font-semibold text-gray-900">{name}</h1>
             <p className="text-sm text-gray-600">Admission Number: {id}</p>
           </div>
         </div>
       </div>
-
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Routine */}
         <div className="w-80 bg-gray-100 flex flex-col flex-shrink-0">
@@ -276,7 +435,6 @@ export default function ExerciseDetails(props: {
               Design Your Exercise
             </h2>
           </div>
-
           <div className="flex-1 overflow-y-auto px-4">
             <div className="space-y-3 mb-6">
               {routine.map((exercise) => (
@@ -285,7 +443,6 @@ export default function ExerciseDetails(props: {
                   exercise={exercise}
                 />
               ))}
-
               {routine.length === 0 && (
                 <div
                   className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500"
@@ -295,7 +452,6 @@ export default function ExerciseDetails(props: {
                   Drag exercises here to build your routine
                 </div>
               )}
-
               {routine.length > 0 && (
                 <div
                   className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-gray-500 text-sm"
@@ -307,7 +463,6 @@ export default function ExerciseDetails(props: {
               )}
             </div>
           </div>
-
           <div className="p-4 flex-shrink-0 border-t border-gray-200">
             <div className="flex gap-2 mb-3">
               <button
@@ -324,14 +479,14 @@ export default function ExerciseDetails(props: {
               </button>
             </div>
             <button
-              onClick={() => console.log("Sending routine to patient", routine)}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+              onClick={handleSendToPatient}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              disabled={sending}
             >
-              Send to Patient
+              {sending ? "Sending..." : "Send to Patient"}
             </button>
           </div>
         </div>
-
         {/* Right Panel - Library */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="p-6 flex-shrink-0">
@@ -348,7 +503,6 @@ export default function ExerciseDetails(props: {
                 Add Custom Exercise
               </Link>
             </div>
-
             <div className="mb-4">
               <input
                 type="text"
@@ -356,9 +510,9 @@ export default function ExerciseDetails(props: {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search"
                 className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md text-sm"
+                aria-label="Search exercises"
               />
             </div>
-
             <div className="flex gap-6 mb-6 border-b border-gray-200">
               <button className="pb-2 text-sm font-medium text-gray-900 border-b-2 border-blue-600">
                 Body Part
@@ -370,7 +524,6 @@ export default function ExerciseDetails(props: {
                 Equipment
               </button>
             </div>
-
             <div className="flex gap-2 mb-6">
               {["Head", "Elbow", "Shoulder", "Back"].map((part) => (
                 <button
@@ -383,45 +536,62 @@ export default function ExerciseDetails(props: {
                       ? "bg-blue-100 border-blue-300 text-blue-700"
                       : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
+                  aria-label={`Filter by ${part}`}
                 >
                   {part}
                 </button>
               ))}
             </div>
           </div>
-
           <div className="flex-1 overflow-y-auto px-6 pb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {libraryExercises.map((exercise, idx) => (
-                <div
-                  key={exercise.id}
-                  draggable
-                  onDragStart={() => handleDragStart(idx)}
-                  className="cursor-grab active:cursor-grabbing transition-transform hover:scale-105"
-                >
-                  <ExerciseCard
-                    videoUrl={exercise.demoUrl ?? ""}
-                    title={exercise.title}
-                    subtitle={exercise.prompt ?? ""}
-                    type={exercise.category ?? ""}
-                    muscleTargeted={
-                      Array.isArray(exercise.targetBodyParts)
-                        ? exercise.targetBodyParts.filter(Boolean).join(", ")
-                        : exercise.targetBodyParts ?? ""
-                    }
-                    equipment={
-                      Array.isArray(exercise.equipment)
-                        ? exercise.equipment.filter(Boolean).join(", ")
-                        : exercise.equipment ?? ""
-                    }
-                  />
-                </div>
-              ))}
-            </div>
+            {loading && (
+              <div className="py-8 text-center text-gray-500">Loading...</div>
+            )}
+            {fetchError && (
+              <div className="py-8 text-center text-red-500">{fetchError}</div>
+            )}
+            {!loading && !fetchError && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredExercises.length === 0 ? (
+                  <div className="text-gray-500 text-center col-span-full">
+                    No exercises found.
+                  </div>
+                ) : (
+                  filteredExercises.map((exercise, idx) => (
+                    <div
+                      key={exercise.id}
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      className="cursor-grab active:cursor-grabbing transition-transform hover:scale-105"
+                      tabIndex={0}
+                      aria-grabbed="false"
+                    >
+                      <ExerciseCard
+                        videoUrl={exercise.demoUrl ?? ""}
+                        title={exercise.title}
+                        subtitle={exercise.prompt ?? ""}
+                        type={exercise.category ?? ""}
+                        muscleTargeted={
+                          Array.isArray(exercise.targetBodyParts)
+                            ? exercise.targetBodyParts
+                                .filter(Boolean)
+                                .join(", ")
+                            : exercise.targetBodyParts ?? ""
+                        }
+                        equipment={
+                          Array.isArray(exercise.equipment)
+                            ? exercise.equipment.filter(Boolean).join(", ")
+                            : exercise.equipment ?? ""
+                        }
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
-
       <div className="px-6 py-8 mt-10 flex justify-between">
         <Link
           className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"

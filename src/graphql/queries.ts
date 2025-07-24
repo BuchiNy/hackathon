@@ -85,6 +85,7 @@ export const getExercise = /* GraphQL */ `query GetExercise($id: ID!) {
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -117,6 +118,7 @@ export const listExercises = /* GraphQL */ `query ListExercises(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -361,6 +363,7 @@ export const getPlanItem = /* GraphQL */ `query GetPlanItem($id: ID!) {
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt

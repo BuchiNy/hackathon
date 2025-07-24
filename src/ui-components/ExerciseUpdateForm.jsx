@@ -201,6 +201,7 @@ export default function ExerciseUpdateForm(props) {
     sets: "",
     weight: "",
     description: "",
+    s3Key: "",
     demoUrl: "",
     createdAt: "",
   };
@@ -218,6 +219,7 @@ export default function ExerciseUpdateForm(props) {
   const [description, setDescription] = React.useState(
     initialValues.description
   );
+  const [s3Key, setS3Key] = React.useState(initialValues.s3Key);
   const [demoUrl, setDemoUrl] = React.useState(initialValues.demoUrl);
   const [createdAt, setCreatedAt] = React.useState(initialValues.createdAt);
   const [errors, setErrors] = React.useState({});
@@ -237,6 +239,7 @@ export default function ExerciseUpdateForm(props) {
     setSets(cleanValues.sets);
     setWeight(cleanValues.weight);
     setDescription(cleanValues.description);
+    setS3Key(cleanValues.s3Key);
     setDemoUrl(cleanValues.demoUrl);
     setCreatedAt(cleanValues.createdAt);
     setErrors({});
@@ -273,6 +276,7 @@ export default function ExerciseUpdateForm(props) {
     sets: [],
     weight: [],
     description: [],
+    s3Key: [],
     demoUrl: [],
     createdAt: [],
   };
@@ -329,6 +333,7 @@ export default function ExerciseUpdateForm(props) {
           sets: sets ?? null,
           weight: weight ?? null,
           description: description ?? null,
+          s3Key: s3Key ?? null,
           demoUrl: demoUrl ?? null,
           createdAt: createdAt ?? null,
         };
@@ -401,6 +406,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -436,6 +442,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -467,6 +474,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -523,6 +531,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -592,6 +601,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -627,6 +637,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -666,6 +677,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -705,6 +717,7 @@ export default function ExerciseUpdateForm(props) {
               sets: value,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -744,6 +757,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight: value,
               description,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -779,6 +793,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description: value,
+              s3Key,
               demoUrl,
               createdAt,
             };
@@ -794,6 +809,42 @@ export default function ExerciseUpdateForm(props) {
         errorMessage={errors.description?.errorMessage}
         hasError={errors.description?.hasError}
         {...getOverrideProps(overrides, "description")}
+      ></TextField>
+      <TextField
+        label="S3 key"
+        isRequired={false}
+        isReadOnly={false}
+        value={s3Key}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              title,
+              category,
+              equipment,
+              targetBodyParts,
+              duration,
+              prompt,
+              reps,
+              sets,
+              weight,
+              description,
+              s3Key: value,
+              demoUrl,
+              createdAt,
+            };
+            const result = onChange(modelFields);
+            value = result?.s3Key ?? value;
+          }
+          if (errors.s3Key?.hasError) {
+            runValidationTasks("s3Key", value);
+          }
+          setS3Key(value);
+        }}
+        onBlur={() => runValidationTasks("s3Key", s3Key)}
+        errorMessage={errors.s3Key?.errorMessage}
+        hasError={errors.s3Key?.hasError}
+        {...getOverrideProps(overrides, "s3Key")}
       ></TextField>
       <TextField
         label="Demo url"
@@ -814,6 +865,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl: value,
               createdAt,
             };
@@ -851,6 +903,7 @@ export default function ExerciseUpdateForm(props) {
               sets,
               weight,
               description,
+              s3Key,
               demoUrl,
               createdAt: value,
             };

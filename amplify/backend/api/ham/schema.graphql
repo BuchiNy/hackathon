@@ -48,7 +48,8 @@ type Exercise
   sets: Int
   weight: Float
   description: String
-  demoUrl: String
+  s3Key: String
+  demoUrl: String @function(name: "getVideoUrlFunction-${env}")
   createdAt: AWSDateTime
   usedInPlanItems: [PlanItem] @hasMany(indexName: "byExercise", fields: ["id"])
 }

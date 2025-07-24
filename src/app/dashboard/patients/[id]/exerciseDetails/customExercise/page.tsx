@@ -17,24 +17,24 @@ export default function CustomExercise(props: {
 }) {
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [s3Key, setS3Key] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [jobError, setJobError] = useState("");
   const [id, setId] = useState<string>("");
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
 
-  // Resolve patient ID
   useEffect(() => {
     props.params.then(({ id }) => setId(id));
   }, [props.params]);
 
-  // Generate video
   const handleGenerate = async () => {
     if (!prompt) return;
 
     setIsGenerating(true);
     setJobError("");
     setVideoUrl("");
+    setS3Key("");
 
     try {
       const result = await client.graphql<GenerateExerciseMediaMutation>({
@@ -49,7 +49,6 @@ export default function CustomExercise(props: {
           setJobError(error);
           setIsGenerating(false);
         } else if (jobId) {
-          console.log("[Polling] Video generation started with jobId:", jobId);
           pollForVideo(jobId);
         }
       } else {
@@ -63,7 +62,6 @@ export default function CustomExercise(props: {
     }
   };
 
-  // Polling logic
   const pollForVideo = async (jobId: string) => {
     const maxAttempts = 30;
     const delay = 20000;
@@ -77,7 +75,9 @@ export default function CustomExercise(props: {
               getVideoJob(id: $id) {
                 id
                 videoUrl
+                s3Key
                 status
+                prompt
                 updated_at
               }
             }
@@ -86,11 +86,10 @@ export default function CustomExercise(props: {
         });
 
         const job = (response as any).data?.getVideoJob;
-        console.log(`[Polling] Attempt ${attempts + 1}:`, job);
 
         if (job?.videoUrl) {
-          console.log("[Polling] Video ready:", job.videoUrl);
           setVideoUrl(job.videoUrl);
+          setS3Key(job.s3Key ?? "");
           setIsGenerating(false);
           return;
         }
@@ -98,12 +97,11 @@ export default function CustomExercise(props: {
         if (++attempts < maxAttempts) {
           setTimeout(checkStatus, delay);
         } else {
-          console.warn("[Polling] Max attempts reached. No video found.");
           setJobError("Video generation timed out. Please try again later.");
           setIsGenerating(false);
         }
       } catch (error) {
-        console.error("[Polling] Error checking video status:", error);
+        console.error("Polling error:", error);
         setJobError("Failed to check video job status.");
         setIsGenerating(false);
       }
@@ -188,7 +186,7 @@ export default function CustomExercise(props: {
           </div>
         </div>
 
-        {/* Nav Buttons */}
+        {/* Navigation */}
         <div className="px-6 py-4 flex justify-between">
           <Link
             className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
@@ -201,7 +199,9 @@ export default function CustomExercise(props: {
           <Link
             href={`/dashboard/patients/${id}/exerciseDetails/customExercise/createExercise${
               name ? `?name=${encodeURIComponent(name)}` : ""
-            }${videoUrl ? `&videoUrl=${encodeURIComponent(videoUrl)}` : ""}`}
+            }${videoUrl ? `&videoUrl=${encodeURIComponent(videoUrl)}` : ""}${
+              prompt ? `&prompt=${encodeURIComponent(prompt)}` : ""
+            }${s3Key ? `&s3Key=${encodeURIComponent(s3Key)}` : ""}`}
             className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
           >
             Next

@@ -155,6 +155,7 @@ export const onCreateExercise = /* GraphQL */ `subscription OnCreateExercise($fi
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -182,6 +183,7 @@ export const onUpdateExercise = /* GraphQL */ `subscription OnUpdateExercise($fi
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -209,6 +211,7 @@ export const onDeleteExercise = /* GraphQL */ `subscription OnDeleteExercise($fi
     sets
     weight
     description
+    s3Key
     demoUrl
     createdAt
     usedInPlanItems {
@@ -524,6 +527,7 @@ export const onCreatePlanItem = /* GraphQL */ `subscription OnCreatePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -573,6 +577,7 @@ export const onUpdatePlanItem = /* GraphQL */ `subscription OnUpdatePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt
@@ -622,6 +627,7 @@ export const onDeletePlanItem = /* GraphQL */ `subscription OnDeletePlanItem(
       sets
       weight
       description
+      s3Key
       demoUrl
       createdAt
       updatedAt

@@ -32,6 +32,7 @@ export declare type ExerciseCreateFormInputValues = {
     sets?: number;
     weight?: number;
     description?: string;
+    s3Key?: string;
     demoUrl?: string;
     createdAt?: string;
 };
@@ -46,6 +47,7 @@ export declare type ExerciseCreateFormValidationValues = {
     sets?: ValidationFunction<number>;
     weight?: ValidationFunction<number>;
     description?: ValidationFunction<string>;
+    s3Key?: ValidationFunction<string>;
     demoUrl?: ValidationFunction<string>;
     createdAt?: ValidationFunction<string>;
 };
@@ -62,6 +64,7 @@ export declare type ExerciseCreateFormOverridesProps = {
     sets?: PrimitiveOverrideProps<TextFieldProps>;
     weight?: PrimitiveOverrideProps<TextFieldProps>;
     description?: PrimitiveOverrideProps<TextFieldProps>;
+    s3Key?: PrimitiveOverrideProps<TextFieldProps>;
     demoUrl?: PrimitiveOverrideProps<TextFieldProps>;
     createdAt?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
