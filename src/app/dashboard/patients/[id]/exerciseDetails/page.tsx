@@ -458,16 +458,9 @@ export default function ExerciseDetails({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-              <span className="text-lg font-medium text-gray-600">JD</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">{name || 'Jane Doe'}</h1>
-              <div className="text-sm text-gray-600">
-                <span>Age: 42 • Gender: Female</span>
-              </div>
-              <div className="text-sm text-gray-600">
-                Injury: Right Shoulder Rotator Cuff Tear
-              </div>
+              <h1 className="text-lg font-semibold text-gray-900">{name}</h1>
             </div>
           </div>
           <Link
