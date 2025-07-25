@@ -5,8 +5,8 @@ import { generateClient } from "aws-amplify/api";
 import { getCurrentUser } from "aws-amplify/auth";
 import { getUser } from "@/graphql/queries";
 import type { GetUserQuery, GetUserQueryVariables } from "@/API";
-import SideNav from "./libs/components/sidenav-link";
 import config from "../../amplifyconfiguration.json";
+import Navbar from "./libs/components/navBar";
 
 Amplify.configure(config);
 const client = generateClient();
@@ -46,11 +46,9 @@ export default function DashboardLayoutClient({
   }, []);
 
   return (
-    <div className="flex h-screen flex-col md:flex-row md:overflow-hidden bg-surface-100">
-      <div className="w-full flex-none md:w-64">
-        <SideNav />
-      </div>
-      <div className="flex-grow p-6 md:overflow-y-auto md:p-12 bg-white text-surface-900">
+    <div className="flex flex-col h-screen">
+        <Navbar />
+      <div className="flex-grow pt-[72px] overflow-y-auto bg-[#F2F7FA] p-6 md:p-12 text-surface-900">
         {userData ? (
           <>
             <p className="text-sm text-gray-600 mb-2">
