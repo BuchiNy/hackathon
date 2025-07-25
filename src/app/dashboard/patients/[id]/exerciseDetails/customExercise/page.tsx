@@ -8,6 +8,9 @@ import { generateClient } from "aws-amplify/api";
 import { generateExerciseMedia } from "@/graphql/mutations";
 import type { GenerateExerciseMediaMutation } from "@/API";
 import config from "../../../../../../amplifyconfiguration.json";
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import TopicOutlinedIcon from '@mui/icons-material/TopicOutlined';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 
 Amplify.configure(config);
 const client = generateClient();
@@ -20,6 +23,8 @@ export default function CustomExercise(props: {
   const [s3Key, setS3Key] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [jobError, setJobError] = useState("");
+  const [focusSide, setFocusSide] = useState("Right");
+  const [exerciseView, setExerciseView] = useState("Front View");
   const [id, setId] = useState<string>("");
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
@@ -111,101 +116,202 @@ export default function CustomExercise(props: {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white border-gray-200 px-6 py-4 flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">{name}</h1>
-            <p className="text-sm text-gray-600">Admission Number: {id}</p>
+      <div className="border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <h1 className="text-2xl font-bold text-gray-900">Exercise Design Studio</h1>
+
+          {/* Progress Steps */}
+          <div className="flex items-center mt-6 space-x-8">
+            {/* Step 1 - Active */}
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-10 h-10 bg-[#005DA4] text-white rounded-full">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-[#005DA4]">Video Upload & Prompt</p>
+                <p className="text-xs text-gray-500">Upload a video and enter a prompt.</p>
+              </div>
+            </div>
+
+            {/* Step 2 - Inactive */}
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-600 rounded-full">
+                <VisibilityOutlinedIcon />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Preview Video</p>
+                <p className="text-xs text-gray-500">Review and edit the generated video.</p>
+              </div>
+            </div>
+
+            {/* Step 3 - Inactive */}
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-600 rounded-full">
+                <TopicOutlinedIcon />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Exercise Details</p>
+                <p className="text-xs text-gray-500">Add target areas and equipment.</p>
+              </div>
+            </div>
+
+            {/* Step 4 - Inactive */}
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-600 rounded-full">
+                <SaveOutlinedIcon />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">Review & Save</p>
+                <p className="text-xs text-gray-500">Preview and save the exercise.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Title */}
-      <div className="bg-white border-gray-200 px-6 py-4 flex-shrink-0">
-        <h1 className="text-ml font-semibold text-gray-900">Custom Exercise</h1>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-white">
-        <div className="flex-1 p-6 overflow-y-auto">
-          {/* Video Card */}
-          <div className="max-w-2xl mb-6 border border-gray-300 rounded-lg bg-gray-100 p-4">
-            <h2 className="text-lg font-medium text-gray-800 mb-2">
-              Video Preview
-            </h2>
-            <div className="w-full aspect-video bg-white rounded-md border border-gray-200 flex items-center justify-center overflow-hidden">
-              {videoUrl ? (
-                <video
-                  src={videoUrl}
-                  controls
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <p className="text-gray-500 text-sm">
-                  {isGenerating
-                    ? "Waiting for video generation..."
-                    : "No video generated yet."}
-                </p>
-              )}
-            </div>
-            {jobError && (
-              <p className="text-sm text-red-600 mt-2">{jobError}</p>
-            )}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="bg-white rounded-lg border border-gray-200 p-8">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload & Describe Your Exercise</h2>
+            <p className="text-gray-600">Help us understand your exercise with a sample video and a short description.</p>
           </div>
 
-          {/* Prompt Input */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Describe the exercise
+          {/* Video Preview Section */}
+          {(videoUrl || isGenerating) && (
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
+                Generated Video Preview
+              </label>
+              <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                <div className="w-full aspect-video bg-black rounded-md overflow-hidden flex items-center justify-center">
+                  {videoUrl ? (
+                    <video
+                      src={videoUrl}
+                      controls
+                      className="w-full h-full object-contain"
+                      autoPlay
+                      loop
+                      muted
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <div className="flex flex-col items-center text-white">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                      <p className="text-white text-lg">Generating video...</p>
+                      <p className="text-gray-300 text-sm mt-2">This may take a few minutes</p>
+                    </div>
+                  )}
+                </div>
+                {jobError && (
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-red-600 text-sm">{jobError}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Exercise Description */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What is the exercise about? Include target area, movement, and goal. <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <textarea
+              placeholder="e.g. Standing hamstring stretch with band - targets posterior thigh muscles to improve flexibility and reduce tension"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g. Standing hamstring stretch with band"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm text-black"
+              className="w-full px-3 text-black py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows={4}
             />
           </div>
 
+          {/* Side Focus and Exercise View */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Which side does the exercise focus on? <span className="text-red-500">*</span>
+              </label>
+              <div className="flex space-x-3">
+                {["Right", "Left", "Both"].map((side) => (
+                  <button
+                    key={side}
+                    onClick={() => setFocusSide(side)}
+                    className={`px-4 py-2 text-sm font-medium rounded-md border ${focusSide === side
+                        ? "bg-blue-50 border-blue-200 text-blue-700"
+                        : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {side}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Choose exercise view <span className="text-red-500">*</span>
+              </label>
+              <div className="flex space-x-3">
+                {["Front View", "Side View", "Detail View"].map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => setExerciseView(view)}
+                    className={`px-4 py-2 text-sm font-medium rounded-md border ${exerciseView === view
+                        ? "bg-blue-50 border-blue-200 text-blue-700"
+                        : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {view}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Generate Button */}
-          <div className="mb-8">
+          <div className="flex justify-center mb-8">
             <button
               onClick={handleGenerate}
               disabled={!prompt || isGenerating}
-              className={`px-4 py-2 text-white rounded-md text-sm font-medium ${
-                !prompt || isGenerating
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
+              className={`px-6 py-3 font-medium rounded-md flex items-center ${!prompt || isGenerating
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
             >
-              {isGenerating ? "Generating..." : "Generate Video"}
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              {isGenerating ? "Generating..." : "Generate Exercise"}
             </button>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <div className="px-6 py-4 flex justify-between">
-          <Link
-            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-            href={`/dashboard/patients/${id}/exerciseDetails${
-              name ? `?name=${encodeURIComponent(name)}` : ""
-            }`}
-          >
-            Previous
-          </Link>
-          <Link
-            href={`/dashboard/patients/${id}/exerciseDetails/customExercise/createExercise${
-              name ? `?name=${encodeURIComponent(name)}` : ""
-            }${videoUrl ? `&videoUrl=${encodeURIComponent(videoUrl)}` : ""}${
-              prompt ? `&prompt=${encodeURIComponent(prompt)}` : ""
-            }${s3Key ? `&s3Key=${encodeURIComponent(s3Key)}` : ""}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-          >
-            Next
-          </Link>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between pt-6 border-t border-gray-200">
+            <Link
+              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200 border border-gray-300"
+              href={`/dashboard/patients/${id}/exerciseDetails${name ? `?name=${encodeURIComponent(name)}` : ""
+                }`}
+            >
+              ← Previous
+            </Link>
+            <Link
+              href={`/dashboard/patients/${id}/exerciseDetails/customExercise/createExercise${name ? `?name=${encodeURIComponent(name)}` : ""
+                }${videoUrl ? `&videoUrl=${encodeURIComponent(videoUrl)}` : ""}${prompt ? `&prompt=${encodeURIComponent(prompt)}` : ""
+                }${s3Key ? `&s3Key=${encodeURIComponent(s3Key)}` : ""}`}
+              className={`px-6 py-2 rounded-md text-sm font-medium ${videoUrl
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+            >
+              Next →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

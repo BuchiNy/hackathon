@@ -452,7 +452,7 @@ export default function ExerciseDetails({
   const estimatedMinutes = `${routine.length * 5}-${routine.length * 5 + 15}`;
 
   return (
-    <div className="h-screen flex flex-col mb-5">
+    <div className="h-9/10 flex flex-col mb-5">
       {/* Header */}
       <div className=" mb-5 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -470,9 +470,12 @@ export default function ExerciseDetails({
               </div>
             </div>
           </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
-            <AutoAwesomeIcon className="mr-2" /> Generate Exercise
-          </button>
+          <Link
+                className="px-4 py-2 bg-[#005DA4] text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                href={`/dashboard/patients/${id}/exerciseDetails/customExercise${name ? `?name=${encodeURIComponent(name)}` : ''}`}
+              >
+               <AutoAwesomeIcon className="mr-2" /> Generate Exercise
+              </Link>
         </div>
       </div>
 
@@ -530,7 +533,7 @@ export default function ExerciseDetails({
             
             <button
               onClick={handleSendToPatient}
-              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg text-base font-medium hover:bg-blue-700 flex items-center justify-center"
+              className="w-full px-4 py-3 bg-[#005DA4] text-white rounded-lg text-base font-medium hover:bg-blue-700 flex items-center justify-center"
             >
               <SendIcon className="mr-2" /> Send to Patient
             </button>
@@ -568,7 +571,7 @@ export default function ExerciseDetails({
 
             {/* Filter Tabs */}
             <div className="flex gap-6 mb-6 border-b border-gray-200">
-              <button className="pb-2 text-sm font-medium text-gray-900 border-b-2 border-blue-600">
+              <button className="pb-2 text-sm font-medium text-gray-900 border-b-2 border-[#005DA4]">
                 Body Part
               </button>
               <button className="pb-2 text-sm font-medium text-gray-500 hover:text-gray-900">
@@ -608,14 +611,14 @@ export default function ExerciseDetails({
               <div className="text-center py-12">
                 <div className="text-gray-500 mb-2">Exercise Not Found</div>
                 <Link
-                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                className="px-4 py-2 bg-[#005DA4] text-white rounded-md text-sm font-medium hover:bg-blue-700"
                 href={`/dashboard/patients/${id}/exerciseDetails/customExercise${name ? `?name=${encodeURIComponent(name)}` : ''}`}
               >
-                Generate Exercise
+                <AutoAwesomeIcon className="mr-2" /> Generate Exercise
               </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredExercises.map((exercise, idx) => (
                   <div
                     key={exercise.id}
