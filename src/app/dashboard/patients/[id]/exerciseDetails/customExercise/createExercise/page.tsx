@@ -13,6 +13,8 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import TopicOutlinedIcon from '@mui/icons-material/TopicOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useRouter } from "next/navigation";
+
 
 const client = generateClient();
 
@@ -34,6 +36,9 @@ export default function CreateExercise(props: {
   const videoUrl = searchParams.get("videoUrl");
   const s3Key = searchParams.get("s3Key");
   const id = params.id;
+
+  const router = useRouter();
+
 
   const handleSaveToLibrary = async () => {
     setLoading(true);
@@ -59,7 +64,8 @@ export default function CreateExercise(props: {
       });
 
       if ("data" in result && result.data?.createExercise?.id) {
-        alert("Exercise saved to library!");
+        const id = result.data.createExercise.id;
+        router.push(`/dashboard/patients/${id}/exerciseDetails${name ? `?name=${encodeURIComponent(name)}` : ""}`);
       } else {
         setErrorMsg("Failed to save exercise. Please try again.");
       }
@@ -275,9 +281,6 @@ export default function CreateExercise(props: {
               >
                 <SaveOutlinedIcon className="w-4 h-4 mr-2" />
                 {loading ? "Saving..." : "Save to Library"}
-              </button>
-              <button className="px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
-                Save Exercise
               </button>
             </div>
           </div>
